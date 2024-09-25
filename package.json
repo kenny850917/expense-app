@@ -9,13 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "chart.js": "^4.4.4",
     "csv-parser": "^3.0.0",
     "multer": "^1.4.5-lts.1",
     "next": "14.2.12",
     "react": "^18",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.41",
     "@types/multer": "^1.4.12",
     "@types/node": "^20",
     "@types/react": "^18",

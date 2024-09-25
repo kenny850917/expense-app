@@ -111,14 +111,18 @@ export const uploadCSV = async (req: Request, res: Response): Promise<void> => {
           console.log('Expense inserted:', insertedExpense);
         }
 
-        // Remove the uploaded file after processing
-        fs.unlinkSync(filePath);
-        console.log('Uploaded file removed:', filePath);
+
 
         res.status(200).json({ message: 'CSV file uploaded and processed successfully.' });
+        console.log('status 200')
       } catch (err) {
         console.error('Error during CSV processing:', err);
         res.status(500).json({ message: 'Error processing CSV file' });
+      }
+      finally{
+        // Remove the uploaded file after processing
+        fs.unlinkSync(filePath);
+        console.log('Uploaded file removed:', filePath);
       }
     })
     .on('error', (err) => {
