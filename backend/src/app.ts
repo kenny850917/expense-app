@@ -3,6 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes';
 import transactionRoutes from './routes/transactionRoutes'
+import creditcardRoute from './routes/creditCardRoutes'
+import userRoutes from './routes/userRoutes'
+import bankAccount from './routes/bankRoutes'
+
+
 
 // Load environment variables
 dotenv.config();
@@ -17,6 +22,9 @@ app.use(cors());
 // Routes
 app.use('/expenses', uploadRoutes);
 app.use(transactionRoutes);
+app.use('/creditcard',creditcardRoute);
+app.use(userRoutes)
+app.use('/bank-account',bankAccount)
 
 // Start the server
 app.listen(port, () => {

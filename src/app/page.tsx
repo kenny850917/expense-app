@@ -12,7 +12,12 @@ const Page: React.FC = () => {
       <div className="w-full max-w-md">
         <CardholderDashboard userId={userId}/>
         <h1 className="text-center text-2xl font-bold mb-6">CSV Upload</h1>
-        <UploadCSV uploadUrl={uploadUrl} />
+        <UploadCSV 
+        uploadUrl="http://localhost:5000/expenses/upload-csv"
+        usersUrl="http://localhost:5000/users"
+        creditCardsUrl="http://localhost:5000/credit_cards"
+        banksUrl="http://localhost:5000/banks"
+      />
       </div>
     </div>
   );
