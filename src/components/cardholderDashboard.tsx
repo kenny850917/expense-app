@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import PieChart from './pieChart';
-
-type CardholderData = {
-  cardholder_name: string;
-  total_amount_spent: number;
-};
+import TransactionPieChart from './transactionPieChart';
+import SelectDate from './selectDate';
 
 type Transaction = {
   expense_name: string;
@@ -15,110 +11,197 @@ type Transaction = {
   bank: string;
 };
 
+type DashboardState = {
+  transactions: Transaction[];
+  filteredTransactions: Transaction[];
+  startDate: string;
+  endDate: string;
+  sortConfig: { key: keyof Transaction; direction: 'asc' | 'desc' } | null;
+  selectedCardholder: string | null;
+  selectedBank: string | null;
+  expenseNameSearch: string | null;
+  billNameSearch: string | null;
+};
+
 const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
-  const [cardholderData, setCardholderData] = useState<CardholderData[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [state, setState] = useState<DashboardState>({
+    transactions: [],
+    filteredTransactions: [],
+    startDate: '',
+    endDate: '',
+    sortConfig: null,
+    selectedCardholder: null,
+    selectedBank: null,
+    expenseNameSearch: null,
+    billNameSearch: null,
+  });
+
   const baseUrl = process.env.BASE_API_URL || 'http://localhost:5000';
-  console.log('process env',process.env.BASE_API_URL)
-  // Fetch cardholder data based on the date range
-  const fetchCardholderData = async () => {
-    try {
-      const response = await fetch(
-        `${baseUrl}/cardholder-amounts/${userId}?startDate=${startDate}&endDate=${endDate}`
-      );
-      const data = await response.json();
-      setCardholderData(data);
-    } catch (error) {
-      console.error('Error fetching cardholder data:', error);
-    }
+
+  // Handle change in state
+  const handleChange = <K extends keyof DashboardState>(key: K, value: DashboardState[K]) => {
+    setState((prevState) => ({
+      ...prevState,
+      [key]: value,
+    }));
   };
 
   // Fetch transaction details based on the date range
   const fetchTransactions = async () => {
     try {
       const response = await fetch(
-        `${baseUrl}/transactions/${userId}?startDate=${startDate}&endDate=${endDate}`
+        `${baseUrl}/transactions/${userId}?startDate=${state.startDate}&endDate=${state.endDate}`
       );
       const data = await response.json();
-      setTransactions(data);
+      handleChange('transactions', data);
+      handleChange('filteredTransactions', data); // Set initial filtered transactions
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
   };
 
+  // Filter transactions based on user interactions (cardholder, bank, etc.)
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchCardholderData();
+    let updatedTransactions = [...state.transactions];
+
+    if (state.selectedCardholder) {
+      updatedTransactions = updatedTransactions.filter((t) => t.cardholder_name === state.selectedCardholder);
+    }
+
+    if (state.selectedBank) {
+      updatedTransactions = updatedTransactions.filter((t) => t.bank === state.selectedBank);
+    }
+
+    if (state.expenseNameSearch) {
+      updatedTransactions = updatedTransactions.filter((t) =>
+        t.expense_name.toLowerCase().includes(state.expenseNameSearch!.toLowerCase())
+      );
+    }
+    if (state.billNameSearch) {
+      updatedTransactions = updatedTransactions.filter((t) =>
+        t.credit_card_bill_id.toLowerCase().includes(state.billNameSearch!.toLowerCase())
+      );
+    }
+
+    if (state.sortConfig !== null) {
+      updatedTransactions.sort((a, b) => {
+        const key = state.sortConfig!.key;
+        if (a[key] < b[key]) {
+          return state.sortConfig!.direction === 'asc' ? -1 : 1;
+        }
+        if (a[key] > b[key]) {
+          return state.sortConfig!.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    handleChange('filteredTransactions', updatedTransactions);
+  }, [
+    state.selectedCardholder,
+    state.selectedBank,
+    state.expenseNameSearch,
+    state.billNameSearch,
+    state.sortConfig,
+    state.transactions,
+  ]);
+
+  // Handle sorting when clicking on table headers
+  const handleSort = (key: keyof Transaction) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (state.sortConfig && state.sortConfig.key === key && state.sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    handleChange('sortConfig', { key, direction });
+  };
+
+  // Fetch transactions on date change
+  useEffect(() => {
+    if (state.startDate && state.endDate) {
       fetchTransactions();
     }
-  }, [startDate, endDate]);
+  }, [state.startDate, state.endDate]);
 
   return (
     <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-4">Cardholder Dashboard</h1>
-
-      <div className="mb-4">
-        <label className="mr-2">Start Date:</label>
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="border px-2 py-1"
+      <div className="p-6 flex items-stretch">
+      <SelectDate
+        startDate={state.startDate}
+        endDate={state.endDate}
+        onChange={handleChange}
         />
-        <label className="ml-4 mr-2">End Date:</label>
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          className="border px-2 py-1"
-        />
+        <div className="flex items-center">
+      <TransactionPieChart filteredTransactions={state.filteredTransactions} />
+        </div>
       </div>
 
-      {/* Display PieChart for Cardholder Amounts */}
-      {cardholderData.length > 0 ? (
-        <PieChart
-          labels={cardholderData.map((item) => item.cardholder_name)}
-          data={cardholderData.map((item) => item.total_amount_spent)}
-        />
-      ) : (
-        <p>No data available for the selected date range.</p>
-      )}
-
-      {/* Table of Transactions */}
-      {transactions.length > 0 && (
-        <div className="w-full mt-8">
-          <h2 className="text-xl font-bold mb-4">Detailed Transactions</h2>
-          <table className="min-w-full table-auto bg-white shadow-md rounded-lg">
-            <thead>
-              <tr className="bg-gray-200 text-left">
-                <th className="px-4 py-2">Cardholder</th>
-                <th className="px-4 py-2">Bill Id</th>
-                <th className="px-4 py-2">Expense Name</th>
-                <th className="px-4 py-2">Amount</th>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Bank</th>
+      {/* Table of Transactions with Sorting and Filters */}
+      <div className="w-full mt-8">
+        <h2 className="text-xl font-bold mb-4">Detailed Transactions</h2>
+        <table className="min-w-full table-auto bg-white shadow-md rounded-md">
+          <thead>
+            <tr className="bg-gray-200 text-left">
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('cardholder_name')}>
+                Cardholder
+              </th>
+              <th className="px-4 py-2 cursor-pointer">
+                Bill Id
+                <select
+                  className="border ml-2"
+                  onChange={(e) => handleChange('billNameSearch', e.target.value)}
+                  value={state.billNameSearch || ''}
+                >
+                  <option value="">All</option>
+                  {Array.from(new Set(state.transactions.map((t) => t.credit_card_bill_id))).map((id, index) => (
+                    <option key={index} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-4 py-2">
+                Expense Name
+                <select
+                  className="border ml-2"
+                  onChange={(e) => handleChange('expenseNameSearch', e.target.value)}
+                  value={state.expenseNameSearch || ''}
+                >
+                  <option value="">All</option>
+                  {Array.from(new Set(state.transactions.map((t) => t.expense_name))).map((name, index) => (
+                    <option key={index} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </th>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('amount')}>
+                Amount
+              </th>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('expense_date')}>
+                Date
+              </th>
+              <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('bank')}>
+                Bank
+              </th>
               </tr>
-            </thead>
-            <tbody>
-              {transactions.map((transaction, index) => (
-                <tr key={index} className="border-t">
-                  <td className="px-4 py-2">{transaction.cardholder_name}</td>
-                  <td className="px-4 py-2">{transaction.credit_card_bill_id}</td>
-                  <td className="px-4 py-2">{transaction.expense_name}</td>
-                  <td className="px-4 py-2">${transaction.amount}</td>
-                  <td className="px-4 py-2">{transaction.expense_date}</td>
-                  <td className="px-4 py-2">{transaction.bank}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+          </thead>
+          <tbody>
+            {state.filteredTransactions.map((transaction, index) => (
+              <tr key={index} className="border-t">
+                <td className="px-4 py-2">{transaction.cardholder_name}</td>
+                <td className="px-4 py-2">{transaction.credit_card_bill_id}</td>
+                <td className="px-4 py-2">{transaction.expense_name}</td>
+                <td className="px-4 py-2">${parseFloat(String(transaction.amount)).toFixed(2)}</td>
+                <td className="px-4 py-2">{transaction.expense_date}</td>
+                <td className="px-4 py-2">{transaction.bank}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
 export default CardholderDashboard;
-
