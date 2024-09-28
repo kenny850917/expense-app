@@ -8,9 +8,11 @@ type CardholderData = {
 
 type Transaction = {
   expense_name: string;
+  credit_card_bill_id: string;
   amount: number;
   expense_date: string;
   cardholder_name: string;
+  bank: string;
 };
 
 const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
@@ -18,12 +20,13 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-
+  const baseUrl = process.env.BASE_API_URL || 'http://localhost:5000';
+  console.log('process env',process.env.BASE_API_URL)
   // Fetch cardholder data based on the date range
   const fetchCardholderData = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/cardholder-amounts/${userId}?startDate=${startDate}&endDate=${endDate}`
+        `${baseUrl}/cardholder-amounts/${userId}?startDate=${startDate}&endDate=${endDate}`
       );
       const data = await response.json();
       setCardholderData(data);
@@ -36,7 +39,7 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
   const fetchTransactions = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/transactions/${userId}?startDate=${startDate}&endDate=${endDate}`
+        `${baseUrl}/transactions/${userId}?startDate=${startDate}&endDate=${endDate}`
       );
       const data = await response.json();
       setTransactions(data);
@@ -91,18 +94,22 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
             <thead>
               <tr className="bg-gray-200 text-left">
                 <th className="px-4 py-2">Cardholder</th>
+                <th className="px-4 py-2">Bill Id</th>
                 <th className="px-4 py-2">Expense Name</th>
                 <th className="px-4 py-2">Amount</th>
                 <th className="px-4 py-2">Date</th>
+                <th className="px-4 py-2">Bank</th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((transaction, index) => (
                 <tr key={index} className="border-t">
                   <td className="px-4 py-2">{transaction.cardholder_name}</td>
+                  <td className="px-4 py-2">{transaction.credit_card_bill_id}</td>
                   <td className="px-4 py-2">{transaction.expense_name}</td>
                   <td className="px-4 py-2">${transaction.amount}</td>
                   <td className="px-4 py-2">{transaction.expense_date}</td>
+                  <td className="px-4 py-2">{transaction.bank}</td>
                 </tr>
               ))}
             </tbody>

@@ -55,10 +55,7 @@ router.get('/transactions/:userId', async (req: Request, res: Response) => {
 
   let query = `
     SELECT 
-      e.expense_name, 
-      e.amount, 
-      e.expense_date, 
-      c.cardholder_name 
+    *
     FROM 
       expenses e
     JOIN 

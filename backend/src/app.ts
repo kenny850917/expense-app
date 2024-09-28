@@ -5,7 +5,7 @@ import uploadRoutes from './routes/uploadRoutes';
 import transactionRoutes from './routes/transactionRoutes'
 import creditcardRoute from './routes/creditCardRoutes'
 import userRoutes from './routes/userRoutes'
-import bankAccount from './routes/bankRoutes'
+import bankAccountRoute from './routes/bankRoutes'
 
 
 
@@ -24,7 +24,7 @@ app.use('/expenses', uploadRoutes);
 app.use(transactionRoutes);
 app.use('/creditcard',creditcardRoute);
 app.use(userRoutes)
-app.use('/bank-account',bankAccount)
+app.use('/bank-account',bankAccountRoute)
 
 // Start the server
 app.listen(port, () => {
