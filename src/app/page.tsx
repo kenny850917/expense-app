@@ -13,13 +13,13 @@ return (
       {/* <Dashboard/> */}
       <CardholderDashboard userId={userId} />
       <h1 className="text-center text-2xl font-bold mb-6">CSV Upload</h1>
-      <UploadCSV 
+      <UploadCSV
         uploadUrl={`${baseUrl}/expenses/upload-csv`}   // Use curly braces for string interpolation
         usersUrl={`${baseUrl}/users`}                 // Use curly braces for string interpolation
         creditCardsUrl={`${baseUrl}/credit_cards`}    // Use curly braces for string interpolation
         banksUrl={`${baseUrl}/banks`}                 // Use curly braces for string interpolation
       />
-    </div>
+  </div>
   // </div>
 );
 }

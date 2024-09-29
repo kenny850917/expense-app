@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TransactionPieChart from './transactionPieChart';
 import SelectDate from './selectDate';
+import { parse } from 'date-fns';
 
 type Transaction = {
   expense_name: string;
@@ -46,6 +47,14 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
     }));
   };
 
+  const handleDateChange = (key: 'startDate' | 'endDate', value: string) => {
+    setState(prevState => ({
+      ...prevState,
+      [key]: value,
+    }));
+  };
+
+
   // Fetch transaction details based on the date range
   const fetchTransactions = async () => {
     try {
@@ -60,9 +69,16 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
     }
   };
 
+  //parseDate to string function
+
+  const parseDate = (dateString: string): Date | undefined => {
+    return dateString ? parse(dateString, 'yyyy-MM-dd', new Date()) : undefined;
+  };
+
+
   // Filter transactions based on user interactions (cardholder, bank, etc.)
   useEffect(() => {
-    let updatedTransactions = [...state.transactions];
+    let updatedTransactions = state.transactions.length>0 ? [...state.transactions]:[];
 
     if (state.selectedCardholder) {
       updatedTransactions = updatedTransactions.filter((t) => t.cardholder_name === state.selectedCardholder);
@@ -127,12 +143,12 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
       <h1 className="text-2xl font-bold mb-4">Cardholder Dashboard</h1>
       <div className="p-6 flex items-stretch">
       <SelectDate
-        startDate={state.startDate}
-        endDate={state.endDate}
-        onChange={handleChange}
-        />
+        startDate={parseDate(state.startDate)}
+        endDate={parseDate(state.endDate)}
+        onChange={handleDateChange}
+/>
         <div className="flex items-center">
-      <TransactionPieChart filteredTransactions={state.filteredTransactions} />
+      <TransactionPieChart filteredTransactions={state.filteredTransactions.length>0?state.filteredTransactions:[]} />
         </div>
       </div>
 
@@ -153,7 +169,7 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
                   value={state.billNameSearch || ''}
                 >
                   <option value="">All</option>
-                  {Array.from(new Set(state.transactions.map((t) => t.credit_card_bill_id))).map((id, index) => (
+                  {state.transactions.length >0&& Array.from(new Set(state.transactions.map((t) => t.credit_card_bill_id))).map((id, index) => (
                     <option key={index} value={id}>
                       {id}
                     </option>
@@ -168,11 +184,11 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
                   value={state.expenseNameSearch || ''}
                 >
                   <option value="">All</option>
-                  {Array.from(new Set(state.transactions.map((t) => t.expense_name))).map((name, index) => (
+                  {state.transactions.length >0 ? Array.from(new Set(state.transactions.map((t) => t.expense_name))).map((name, index) => (
                     <option key={index} value={name}>
                       {name}
                     </option>
-                  ))}
+                  )):''}
                 </select>
               </th>
               <th className="px-4 py-2 cursor-pointer" onClick={() => handleSort('amount')}>
@@ -187,7 +203,7 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
               </tr>
           </thead>
           <tbody>
-            {state.filteredTransactions.map((transaction, index) => (
+            {state.filteredTransactions.length ? state.filteredTransactions.map((transaction, index) => (
               <tr key={index} className="border-t">
                 <td className="px-4 py-2">{transaction.cardholder_name}</td>
                 <td className="px-4 py-2">{transaction.credit_card_bill_id}</td>
@@ -196,7 +212,7 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
                 <td className="px-4 py-2">{transaction.expense_date}</td>
                 <td className="px-4 py-2">{transaction.bank}</td>
               </tr>
-            ))}
+            )):''}
           </tbody>
         </table>
       </div>
