@@ -36,10 +36,10 @@ const SelectDate: React.FC<SelectDateProps> = ({ startDate, endDate, onChange })
   };
 
   return (
-    <div className="flex flex-col items-center space-y-4">
+    <div className="p-10 flex items-center justify-center">
       {/* Inline Date Range Picker */}
-      <div className="flex flex-col items-center">
-        <label className="font-bold text-gray-700 mb-2">Select Date Range:</label>
+      <div className="flex flex-col items-center ">
+        <p className="font-bold text-gray-700 mb-2">Select Date Range:</p>
         <DatePicker
           selected={startDate}
           onChange={handleDateChange}

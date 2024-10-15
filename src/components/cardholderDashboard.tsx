@@ -141,12 +141,12 @@ const CardholderDashboard: React.FC<{ userId: string }> = ({ userId }) => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
       <h1 className="text-2xl font-bold mb-4">Cardholder Dashboard</h1>
-      <div className="p-6 flex items-stretch">
+      <div className="p-6 flex col-2 items-start">
       <SelectDate
         startDate={parseDate(state.startDate)}
         endDate={parseDate(state.endDate)}
         onChange={handleDateChange}
-/>
+        />
         <div className="flex items-center">
       <TransactionPieChart filteredTransactions={state.filteredTransactions.length>0?state.filteredTransactions:[]} />
         </div>
